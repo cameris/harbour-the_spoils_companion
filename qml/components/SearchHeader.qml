@@ -150,7 +150,7 @@ Column {
         width: parent.width
 
         font.capitalization: Font.AllLowercase
-        inputMethodHints: Qt.ImhNoAutoUppercase
+        inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
         validator: RegExpValidator { regExp: /^[0-9a-zA-Z\.#+-=_ ]*$/ }
 
         text: cardModel.stringFilter
