@@ -28,8 +28,11 @@ CardProxyModel::CardProxyModel(QObject *parent) :
 {
     setDynamicSortFilter(true);
 
-    _sortList << "" << "" << "";
-    _sortDescList << false << false << false;
+    _sortDefaultList << "Trade" << "Type" << "Name";
+    _sortDefaultDescList << false << false << false;
+
+    _sortList = _sortDefaultList;
+    _sortDescList = _sortDefaultDescList;
 
     _stringRegExp.setCaseSensitivity(Qt::CaseInsensitive);
     _stringRegExp.setPatternSyntax(QRegExp::Wildcard);
@@ -78,10 +81,7 @@ void CardProxyModel::componentComplete()
 
     loadSortList();
     loadSortDescList();
-    fullSort();
-
-    emit sortStringChanged();
-    emit descendingSortChanged();
+    sort(0);
 }
 
 QObject *CardProxyModel::source() const
@@ -168,41 +168,40 @@ QQmlListProperty<NumericFilter> CardProxyModel::statsFilter()
 
 bool CardProxyModel::descendingSort() const
 {
-    return _sortDescList.at(2);
+    return _sortDescList.first();
 }
 
 void CardProxyModel::setDescendingSort(bool descendingSort)
 {
-    if (descendingSort == _sortDescList.at(2))
+    if (descendingSort == _sortDescList.first())
         return;
 
-    _sortDescList.replace(2, descendingSort);
-    sort(0, _sortDescList.at(2) ? Qt::DescendingOrder : Qt::AscendingOrder);
-    saveSortDescList();
+    _sortDescList.replace(0, descendingSort);
 
+    setDynamicSortFilter(false);
+    sort(0);
+    setDynamicSortFilter(true);
     emit descendingSortChanged();
 }
 
 QString CardProxyModel::sortString() const
 {
-    return _sortList.last();
-    return _sortList.at(2);
+    return _sortList.first();
 }
 
 void CardProxyModel::setSortString(const QString &sortString)
 {
-    int sortRole = _sortNameRoleMap.value(sortString, CardModel::setReleaseOrderRole);
-
-    if (sortRole == this->sortRole())
+    if (sortString == _sortList.first())
         return;
 
-    _sortList.removeFirst();
-    _sortList.append(sortString);
-    _sortDescList.removeFirst();
-    _sortDescList.append(_sortDescList.at(1));
+    _sortList.insert(0, sortString);
+    _sortList.removeLast();
+    _sortDescList.insert(0, _sortDescList.first());
+    _sortDescList.removeLast();
 
-    setSortRole(sortRole);
-
+    setDynamicSortFilter(false);
+    sort(0);
+    setDynamicSortFilter(true);
     emit sortStringChanged();
     //DISABLED BUG 2
 //    emit sectionPropertyChanged();
@@ -213,6 +212,7 @@ void CardProxyModel::setSortString(const QString &sortString)
 QStringList CardProxyModel::sortStrings() const
 {
     QStringList sortStrings = _sortNameRoleMap.keys();
+    sortStrings.sort();
     return sortStrings;
 }
 
@@ -253,16 +253,20 @@ void CardProxyModel::resetFiltersAndSorting()
     invalidateFilter();
 
     _sortList.clear();
-    _sortList.append("Name");
-    _sortList.append("Trade");
-    _sortList.append("Set");
+    foreach (QString val, _sortDefaultList)
+    {
+        _sortList.append(val);
+    }
 
     _sortDescList.clear();
-    _sortDescList.append(false);
-    _sortDescList.append(false);
-    _sortDescList.append(true);
+    foreach (bool val, _sortDefaultDescList)
+    {
+        _sortDescList.append(val);
+    }
 
-    fullSort();
+    setDynamicSortFilter(false);
+    sort(0);
+    setDynamicSortFilter(true);
 
     emit sortStringChanged();
     emit descendingSortChanged();
@@ -274,7 +278,7 @@ void CardProxyModel::resetFiltersAndSorting()
 //    int role = sortRole();
 
 //    // special handling
-//    if (role == CardModel::setReleaseOrderRole)
+//    if (role == CardModel::nameRole)
 //    {
 //        // sorting set by releaseOrder but want name as section
 //        role = CardModel::setRole;
@@ -517,6 +521,48 @@ bool CardProxyModel::filterAcceptsRow(int source_row, const QModelIndex &source_
     return true;
 }
 
+bool CardProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
+{
+    for (int i = 0; i < _sortList.size(); ++i)
+    {
+        int role = _sortNameRoleMap.value(_sortList.at(i), CardModel::nameRole);
+        if (left.data(role) == right.data(role))
+        {
+            continue;
+        }
+        QVariant leftData = left.data(role);
+        QVariant rightData = right.data(role);
+        bool returnValue;
+
+        if (leftData.type() == QVariant::Int)
+        {
+            returnValue = leftData.toInt() < rightData.toInt();
+        }
+        else if (leftData.type() == QVariant::UInt)
+        {
+            returnValue = leftData.toUInt() < rightData.toUInt();
+        }
+        else
+        {
+            returnValue = leftData.toString() < rightData.toString();
+        }
+
+        bool desc;
+        if (i > _sortDescList.size())
+        {
+            desc = _sortDescList.last();
+        }
+        else
+        {
+            desc = _sortDescList.at(i);
+        }
+
+        return desc ? !returnValue : returnValue;
+
+    }
+    return true;
+}
+
 void CardProxyModel::loadTextFilter()
 {
     if (_textFilters.size())
@@ -698,26 +744,40 @@ void CardProxyModel::loadSortStrings()
 void CardProxyModel::loadSortList()
 {
     _sortList.clear();
+
+    QVariantList defaultList;
+    foreach (QString val, _sortDefaultList)
+    {
+        defaultList.append(val);
+    }
+
     QVariantList sortList =
-            _settings.value(_settingsSection + "/sort",
-                            (QVariantList() << "Name" << "Trade" << "Set")).toList();
+            _settings.value(_settingsSection + "/sort", defaultList).toList();
 
     for (int i = 0; i < sortList.size(); ++i)
     {
         _sortList.append(sortList.at(i).toString());
     }
+    emit sortStringChanged();
 }
 
 void CardProxyModel::loadSortDescList()
 {
     _sortDescList.clear();
+
+    QVariantList defaultList;
+    foreach (bool val, _sortDefaultDescList)
+    {
+        defaultList.append(val);
+    }
+
     QVariantList sortDescList =
-            _settings.value(_settingsSection + "/sortDescending",
-                            (QVariantList() << false << false << true)).toList();
+            _settings.value(_settingsSection + "/sortDescending", defaultList).toList();
     for (int i = 0; i < sortDescList.size(); ++i)
     {
         _sortDescList.append(sortDescList.at(i).toBool());
     }
+    emit descendingSortChanged();
 }
 
 void CardProxyModel::saveSortList()
@@ -738,18 +798,6 @@ void CardProxyModel::saveSortDescList()
         tmp.append(_sortDescList.at(i));
     }
     _settings.setValue(_settingsSection + "/sortDescending", tmp);
-}
-
-void CardProxyModel::fullSort()
-{
-    for (int i = 0; i < _sortList.size(); ++i)
-    {
-        int sortRole = _sortNameRoleMap.value(_sortList.at(i), CardModel::setReleaseOrderRole);
-        bool sortDesc = _sortDescList.at(i);
-
-        setSortRole(sortRole);
-        sort(0, sortDesc ? Qt::DescendingOrder : Qt::AscendingOrder);
-    }
 }
 
 void CardProxyModel::saveCategoryFilters(QList<CategoryFilter *> filters)

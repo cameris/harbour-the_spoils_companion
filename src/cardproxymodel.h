@@ -132,6 +132,7 @@ public slots:
 protected:
     // QSortFilterProxyModel interface
     bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const;
+    bool lessThan(const QModelIndex &left, const QModelIndex &right) const;
 
 private:
     CardModel *_cardmodel;
@@ -156,6 +157,8 @@ private:
     QMap<QString, int> _sortNameRoleMap;
     QStringList _sortList;
     QList<bool> _sortDescList;
+    QStringList _sortDefaultList;
+    QList<bool> _sortDefaultDescList;
 
     void loadTextFilter();
     void loadTypeFilter();
@@ -170,7 +173,6 @@ private:
     void loadSortDescList();
     void saveSortList();
     void saveSortDescList();
-    void fullSort();
 
     void saveCategoryFilters(QList<CategoryFilter *> filters);
     void resetCategoryFilters(QList<CategoryFilter *> filters);
