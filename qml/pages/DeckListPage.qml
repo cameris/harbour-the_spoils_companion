@@ -100,6 +100,9 @@ Page {
                     text: "Export as OCTGN deck"
                     onClicked: {
                         deckView.model.exportDeckOCTGN(index)
+                        exportPopUpComponent.createObject(deckListPage, {
+                                                     "deckName" : model.name
+                                                 })
                     }
                 }
 
@@ -179,6 +182,62 @@ Page {
                                })
             }
 
+        }
+    }
+
+    Component {
+        id: exportPopUpComponent
+        Rectangle {
+            id: exportRectangle
+            property string deckName
+
+            anchors.top: parent.top
+            width: parent.width
+            height: exportLabel.height
+
+            color: Theme.highlightBackgroundColor
+
+            Rectangle {
+                anchors.fill: parent
+                color: Theme.rgba(Theme.highlightDimmerColor, 0.3)
+            }
+
+            Label {
+                id: exportLabel
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                    margins: Theme.paddingMedium
+                }
+
+                wrapMode: Text.WordWrap
+                color: Theme.highlightColor
+                opacity: parent.opacity
+                font.pixelSize: Theme.fontSizeTiny
+                text: "Exported to Documents" + (deckName ? "/" + deckName + ".o8d" : "")
+            }
+
+            Timer {
+                interval: 4500
+                running: true
+                onTriggered: {
+                    exportDestroyAnimation.running = true
+                }
+            }
+
+            NumberAnimation on opacity {
+                id: exportDestroyAnimation
+                to: 0
+                duration: 500
+                running: false
+
+                onRunningChanged: {
+                    if (!running) {
+                        exportRectangle.destroy()
+                    }
+                }
+            }
         }
     }
 
