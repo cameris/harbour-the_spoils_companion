@@ -50,7 +50,7 @@ QString stringToLeetPattern(const QString &string)
     tmp.replace('s', "[s5]", Qt::CaseInsensitive);
     tmp.replace('t', "[t7]", Qt::CaseInsensitive);
 
-    return string;
+    return tmp;
 }
 
 void CardProxyModel::classBegin()
