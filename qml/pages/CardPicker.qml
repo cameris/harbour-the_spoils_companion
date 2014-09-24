@@ -167,14 +167,15 @@ Dialog {
 
                 onClicked: {
                     headerContainer.searchField.focus = false
-                    var dialog = pageStack.push(Qt.resolvedUrl("CardDialog.qml"),
+                    var dialog = pageStack.push("CardDialog.qml",
                                               {currentIndex: index, cardmodel: cardModel})
 
-                    dialog.done.connect(function () {
-                        cardGridView.positionViewAtIndex(dialog.currentIndex, ListView.Contain)
+                    dialog.rejected.connect(function () {
+                        cardGridView.positionViewAtIndex(dialog.currentIndex, GridView.Contain)
                     })
                     dialog.accepted.connect(function () {
                         cardPicker.pick(dialog.selectedId)
+                        cardGridView.positionViewAtIndex(dialog.currentIndex, GridView.Contain)
                     })
                 }
             }
@@ -282,14 +283,15 @@ Dialog {
 
                 onClicked: {
                     headerContainer.searchField.focus = false
-                    var dialog = pageStack.push(Qt.resolvedUrl("CardDialog.qml"),
+                    var dialog = pageStack.push("CardDialog.qml",
                                               {currentIndex: index, cardmodel: cardModel})
 
-                    dialog.done.connect(function () {
+                    dialog.rejected.connect(function () {
                         cardListView.positionViewAtIndex(dialog.currentIndex, ListView.Contain)
                     })
                     dialog.accepted.connect(function () {
                         cardPicker.pick(dialog.selectedId)
+                        cardListView.positionViewAtIndex(dialog.currentIndex, ListView.Contain)
                     })
                 }
             }
