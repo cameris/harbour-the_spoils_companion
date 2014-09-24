@@ -50,12 +50,12 @@ OTHER_FILES += \
     qml/pages/DeckPage.qml \
     qml/pages/DeckStatsPage.qml \
     qml/harbour-the_spoils_companion.qml \
-    rpm/harbour-the_spoils_companion.changes.in \
     rpm/harbour-the_spoils_companion.yaml \
     rpm/harbour-the_spoils_companion.spec \
     qml/components/GetImageText.qml \
     qml/components/OpenBrowser.qml \
-    qml/pages/AboutPage.qml
+    qml/pages/AboutPage.qml \
+    rpm/harbour-the_spoils_companion.changes
 
 # additional files to install
 cardDB.files = cards.sqlite
