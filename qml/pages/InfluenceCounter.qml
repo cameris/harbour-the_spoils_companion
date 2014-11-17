@@ -180,6 +180,7 @@ Page {
                 right: parent.right
                 verticalCenter: parent.verticalCenter
             }
+            color: Theme.highlightColor
         }
 
         CounterLabel {
@@ -224,6 +225,7 @@ Page {
 
             Separator {
                 width: parent.width
+                color: Theme.highlightColor
             }
 
             Label {
