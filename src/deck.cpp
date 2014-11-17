@@ -173,7 +173,6 @@ QVariantList Deck::setCounts()
     return setCounts;
 }
 
-#include <QDebug>
 bool Deck::buildable()
 {
     QSqlQuery query;

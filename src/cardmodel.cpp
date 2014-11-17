@@ -57,8 +57,6 @@ int CardModel::rowCount(const QModelIndex &parent) const
 
 QString imageString(Card *card)
 {
-//    return QString("844d5fe3-bdb5-4ad2-ba83-88c2c2db6d88/Sets/%1/Cards/%2.jpg")
-//            .arg(card->set()->octgnId, card->id());
     return QString("%1/Sets/%2/Cards/%3.jpg")
             .arg(SPOILS_OCTGNID, card->set()->octgnId, card->id());
 }
@@ -350,13 +348,11 @@ QList<Card *> CardModel::loadCards()
     QSqlQuery query;
     DBManager *db = DBManager::instance();
 
-    QString whereClause;
-
     query = db->prepare(
-                "SELECT C.octgnId, C.name, ruletext, flavor, numberInSet, cost,"
+                "SELECT octgnId, name, ruletext, flavor, numberInSet, cost,"
                 " threshold, strength, life, speed, structure, subtype,"
                 " tradeId, typeId, rarityId, setId"
-                " FROM cards AS C;"
+                " FROM cards;"
                 );
     db->execute(query);
 
@@ -398,13 +394,13 @@ QList<Card *> CardModel::loadCards(QStringList octgnIds)
     QSqlQuery query;
     DBManager *db = DBManager::instance();
 
-    QString whereClause = QString(" WHERE C.octgnId IN ('%1') ").arg(octgnIds.join("', '"));
+    QString whereClause = QString(" WHERE octgnId IN ('%1') ").arg(octgnIds.join("', '"));
 
     query = db->prepare(QString(
-                            "SELECT C.octgnId, C.name, ruletext, flavor, numberInSet, cost,"
+                            "SELECT octgnId, name, ruletext, flavor, numberInSet, cost,"
                             " threshold, strength, life, speed, structure, subtype,"
                             " tradeId, typeId, rarityId, setId"
-                            " FROM cards AS C"
+                            " FROM cards"
                             " %1;"
                             ).arg(whereClause));
     db->execute(query);
