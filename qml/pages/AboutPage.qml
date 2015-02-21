@@ -61,6 +61,7 @@ Page {
 
             Separator {
                 width: parent.width
+                color: Theme.highlightColor
             }
 
             GetImageText {
