@@ -48,7 +48,7 @@ Page {
 
             OpenBrowser {
                 anchors.fill: parent
-                url: "http://www.thespoils.com"
+                url: "http://www.thespoilscardgame.com"
             }
         }
 
