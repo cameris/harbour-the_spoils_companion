@@ -81,6 +81,7 @@ SilicaFlickable {
         height: cardFlick.contentHeight
         smooth: !(cardFlick.movingVertically || cardFlick.movingHorizontally)
         anchors.centerIn: parent
+		clip: true
 
         Image {
             id: cardImage

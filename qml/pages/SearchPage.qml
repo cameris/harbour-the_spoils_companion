@@ -28,6 +28,9 @@ Page {
     objectName: "cardSearchPage"
 
     property string activeLayout: settings.value(cardModel.settingsSection + "/layout", "list")
+    property bool allowPick: false
+
+    signal picked(string id)
 
     function scrollToTop() {
         viewLoader.item.scrollToTop()
@@ -101,27 +104,29 @@ Page {
                 sourceComponent: sharedPullDown
             }
 
-            //WORKAROUND BUG 1, first item not visible after
-            // filtering until the gridview is moved
-            // moving helps, but seems to not work always
-            function microMove() {
-                    cardGridView.contentY += 1
-                    cardGridView.contentY -= 1
-            }
-            Component.onCompleted: headerContainer.searchField.textChanged.connect(microMove)
-            Component.onDestruction: headerContainer.searchField.textChanged.disconnect(microMove)
-            //END WORKAROUND
-
             onMovingVerticallyChanged: {
                 headerContainer.searchField.focus = false
             }
 
             model: cardModel
 
-            delegate: BackgroundItem {
+            delegate: ListItem {
                 id: gridDelegate
                 width: cardGridView.cellWidth
-                height: cardGridView.cellHeight
+                contentHeight: cardGridView.cellHeight
+                showMenuOnPressAndHold: searchPage.allowPick
+
+                menu: GridContextMenu {
+                    gridDelegate:  gridDelegate
+                    modelCount: cardGridView.count
+
+                    MenuItem {
+                        text: "Add card"
+                        onClicked: {
+                            searchPage.picked(id)
+                        }
+                    }
+                }
 
                 Loader {
                     id: thumbLoader
@@ -156,12 +161,20 @@ Page {
 
                 onClicked: {
                     headerContainer.searchField.focus = false
-                    var page = pageStack.push(Qt.resolvedUrl("CardPage.qml"),
-                                              {currentIndex: index, cardmodel: cardModel})
+                    var page = pageStack.push(Qt.resolvedUrl("CardPage.qml"), {
+                                                  currentIndex: index,
+                                                  cardmodel: cardModel,
+                                                  allowPick: searchPage.allowPick
+                                              })
+
+                    if (searchPage.allowPick) {
+                        page.picked.connect(searchPage.picked)
+                    }
 
                     function repositionView() {
                         if (page.status === PageStatus.Deactivating)
                         {
+                            page.picked.disconnect(picked)
                             page.statusChanged.disconnect(repositionView)
                             cardGridView.positionViewAtIndex(page.currentIndex, ListView.Contain)
                         }
@@ -200,20 +213,23 @@ Page {
 
             model: cardModel
 
-            //DISABLED BUG 2
-//            section.property: cardModel.sectionProperty
-//            section.criteria: ViewSection.FullString
-//            section.delegate: SectionHeader {
-//                text: cardModel.sectionExtraLabel + section
-//            }
-            //END DISABLED
-
-            delegate: BackgroundItem {
+            delegate: ListItem {
                 id: listDelegate
 
                 property int delegateMargin: Theme.paddingLarge
 
-                height: Math.max(thumbLoader.height, textColumn.height) + delegateMargin
+                contentHeight: Math.max(thumbLoader.height, textColumn.height) + delegateMargin
+
+                showMenuOnPressAndHold: searchPage.allowPick
+
+                menu: ContextMenu {
+                    MenuItem {
+                        text: "Add card"
+                        onClicked: {
+                            searchPage.picked(id)
+                        }
+                    }
+                }
 
                 Loader {
                     id: thumbLoader
@@ -266,12 +282,20 @@ Page {
 
                 onClicked: {
                     headerContainer.searchField.focus = false
-                    var page = pageStack.push(Qt.resolvedUrl("CardPage.qml"),
-                                              {currentIndex: index, cardmodel: cardModel})
+                    var page = pageStack.push(Qt.resolvedUrl("CardPage.qml"), {
+                                                  currentIndex: index,
+                                                  cardmodel: cardModel,
+                                                  allowPick: searchPage.allowPick
+                                              })
+
+                    if (searchPage.allowPick) {
+                        page.picked.connect(searchPage.picked)
+                    }
 
                     function repositionView() {
                         if (page.status === PageStatus.Deactivating)
                         {
+                            page.picked.disconnect(picked)
                             page.statusChanged.disconnect(repositionView)
                             cardListView.positionViewAtIndex(page.currentIndex, ListView.Contain)
                         }

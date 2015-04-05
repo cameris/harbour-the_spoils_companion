@@ -135,13 +135,24 @@ Column {
         }
         onClicked: {
             searchField.focus = false
-            var dialog = pageStack.push(sortPicker, {
-                                            model: cardModel.sortStrings,
-                                            currentString: cardModel.sortString
-                                        })
-            dialog.accepted.connect(function () {
-                cardModel.sortString = dialog.currentString
-            })
+            var page = pageStack.push(sortPicker, {
+                               sortModel: cardModel.sortStrings,
+                               currentSort: cardModel.sortString
+                           })
+
+            function setSort(sortString) {
+                cardModel.sortString = sortString
+            }
+            function finish() {
+                if (page.status === PageStatus.Deactivating)
+                {
+                    page.statusChanged.disconnect(finish)
+                    page.picked.disconnect(setSort)
+                }
+            }
+
+            page.statusChanged.connect(finish)
+            page.picked.connect(setSort)
         }
     }
 
@@ -172,6 +183,8 @@ Column {
             SilicaFlickable {
                 anchors.fill: parent
                 contentHeight: column.height
+
+                VerticalScrollDecorator {}
 
                 PullDownMenu {
                     MenuItem {
@@ -251,6 +264,8 @@ Column {
             SilicaFlickable {
                 anchors.fill: parent
                 contentHeight: column.height
+
+                VerticalScrollDecorator {}
 
                 PullDownMenu {
                     MenuItem {
@@ -389,34 +404,46 @@ Column {
 
     Component {
         id: sortPicker
-        Dialog {
+        Page {
             id: sortPickerDialog
-            property alias model: sortView.model
-            property string currentString
+            property alias sortModel: sortView.model
+            property string currentSort
 
-            SilicaListView {
-                id: sortView
+            signal picked(string sortString)
+
+            SilicaFlickable {
                 anchors.fill: parent
+                contentHeight: column.height
 
-                header: DialogHeader {
-                    title: "Sort by"
-                }
+                VerticalScrollDecorator {}
 
-                delegate: BackgroundItem {
+                Column {
+                    id: column
                     width: parent.width
-                    height: Theme.itemSizeSmall
-                    highlighted: down || currentString === modelData
 
-                    Label {
-                        x: Theme.paddingLarge
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: highlighted ? Theme.highlightColor : Theme.primaryColor
-                        text: modelData
+                    PageHeader {
+                        title: "Sort by"
                     }
 
-                    onClicked: {
-                        currentString = modelData
-                        sortPickerDialog.accept()
+                    Repeater {
+                        id: sortView
+                        delegate: BackgroundItem {
+                            width: parent.width
+                            height: Theme.itemSizeSmall
+                            highlighted: down || currentSort === modelData
+
+                            Label {
+                                x: Theme.paddingLarge
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: highlighted ? Theme.highlightColor : Theme.primaryColor
+                                text: modelData
+                            }
+
+                            onClicked: {
+                                currentSort = modelData
+                                picked(currentSort)
+                            }
+                        }
                     }
                 }
             }

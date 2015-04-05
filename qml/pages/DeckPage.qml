@@ -111,9 +111,11 @@ Page {
                 text: "Add card"
                 onClicked: {
                     headerContainer.searchField.focus = false
-                    var picker = pageStack.push("CardPicker.qml")
+                    var picker = pageStack.push("SearchPage.qml", {
+                                                    allowPick: true
+                                                })
 
-                    picker.pick.connect(function (octgnId) {
+                    picker.picked.connect(function (octgnId) {
                         cardModel.activeModel.addCard(octgnId)
                     })
                 }
@@ -147,17 +149,6 @@ Page {
             Loader {
                 sourceComponent: sharedPullDown
             }
-
-            //WORKAROUND BUG 1, first item not visible after
-            // filtering until the gridview is moved
-            // moving helps, but seems to not work always
-            function microMove() {
-                cardGridView.contentY += 1
-                cardGridView.contentY -= 1
-            }
-            Component.onCompleted: headerContainer.searchField.textChanged.connect(microMove)
-            Component.onDestruction: headerContainer.searchField.textChanged.disconnect(microMove)
-            //END WORKAROUND
 
             onMovingVerticallyChanged: {
                 headerContainer.searchField.focus = false
@@ -338,14 +329,6 @@ Page {
             }
 
             model: cardModel
-
-            //DISABLED BUG 2
-            //            section.property: cardModel.sectionProperty
-            //            section.criteria: ViewSection.FullString
-            //            section.delegate: SectionHeader {
-            //                text: cardModel.sectionExtraLabel + section
-            //            }
-            //END DISABLED
 
             delegate: ListItem {
                 id: listDelegate

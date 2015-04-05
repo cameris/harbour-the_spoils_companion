@@ -43,8 +43,6 @@ OTHER_FILES += \
     qml/components/SearchHeader.qml \
     qml/components/GridContextMenu.qml \
     qml/pages/InfluenceCounter.qml \
-    qml/pages/CardPicker.qml \
-    qml/pages/CardDialog.qml \
     qml/pages/CollectionPage.qml \
     qml/pages/DeckListPage.qml \
     qml/pages/DeckPage.qml \

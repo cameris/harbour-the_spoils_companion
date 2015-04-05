@@ -25,48 +25,80 @@ import "../components"
 Page {
     id: cardPage
 
-    property alias currentIndex: cardListView.currentIndex
-    property alias cardmodel: cardListView.model
+    property alias currentIndex: cardView.currentIndex
+    property alias cardmodel: cardView.model
+	property bool allowPick: false
 
-    backNavigation: cardListView.interactive
+	signal picked(string id)
 
-    SilicaListView {
-        id: cardListView
-        snapMode: ListView.SnapOneItem
-        highlightRangeMode: ListView.StrictlyEnforceRange
+    backNavigation: cardView.interactive
 
-        pressDelay: 0
+    SilicaFlickable {
+        anchors.fill:parent
 
-        anchors.fill: parent
-
-        delegate: CardImage {
-            id: delegateCard
-            width: cardPage.width
-            height: cardPage.height
-            source: model.image
-
-            onScaledChanged: {
-                if (scaled) {
-                    cardListView.interactive = false
+        PullDownMenu {
+			visible: allowPick
+            MenuItem {
+                text: "Add card"
+                visible: allowPick
+                onClicked: {
+                    cardPage.picked(cardView.currentItem.itemData.id)
                 }
-                else {
-                    cardListView.interactive = true
-                }
-            }
-
-            Loader {
-                active: model.image === ""
-                source: "../components/GetImageText.qml"
-                anchors.centerIn: parent
-                width: parent.width - 2*Theme.paddingLarge
             }
         }
 
-        VerticalScrollDecorator {}
+        SlideshowView {
+            id: cardView
+
+            anchors.fill: parent
+
+            delegate: Item {
+                property variant itemData: model
+
+                width: cardView.itemWidth
+                height: cardView.itemHeight
+
+                CardImage {
+					id: delegateCard
+					width: parent.width
+					height: parent.height
+					source: model.image
+
+                    onScaledChanged: {
+                        if (scaled) {
+                            cardView.interactive = false
+                        }
+                        else {
+                            cardView.interactive = true
+                        }
+                    }
+
+					Loader {
+						active: model.image === ""
+						source: "../components/GetImageText.qml"
+						anchors.centerIn: parent
+						width: parent.width - 2*Theme.paddingLarge
+					}
+				}
+
+			}
+
+            Component.onCompleted: {
+                positionViewAtIndex(currentIndex, PathView.SnapPosition)
+            }
+
+        }
+
+        MouseArea {
+            // dummy to allow back navigation instead of
+            // prev/next item on top of the page
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+            }
+
+            height: Theme.itemSizeHuge
+        }
     }
 }
-
-
-
-
-
